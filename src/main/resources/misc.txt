@@ -1,0 +1,6 @@
+http://localhost:8080/actuator/metrics/hikaricp.connections
+
+http://localhost:8080/h2-console
+JDBC URL: jdbc:h2:mem:db_bank
+
+http://localhost:8080/bank/withdraw?accountId=1&amount=100

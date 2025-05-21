@@ -1,0 +1,159 @@
+spring:
+  application:
+    name: bank-demo
+  # Disable Spring banner for cleaner startup logs
+  banner:
+    charset: UTF-8
+    location: banner/banner
+  main:
+    banner-mode: console
+  messages:
+    always-use-message-format: true
+    basename: base
+    encoding: UTF-8
+    fallback-to-system-locale: false
+  # Force ANSI color output for better log readability
+  output:
+    ansi:
+      enabled: always
+
+  # DATASOURCE & CONNECTION POOL
+  datasource:
+    # H2 Database Configuration
+    driver-class-name: org.h2.Driver
+    # Connection URL with optimizations:
+    # - DB_CLOSE_DELAY=-1 keeps in-memory DB alive
+    # - MODE=MySQL for MySQL compatibility
+    # - INIT runs schema initialization
+    url: jdbc:h2:mem:9092/db_bank;DB_CLOSE_DELAY=-1;MODE=MySQL;
+    username: sa  # Default H2 username
+    password: sa  # Default H2 password
+
+    # HikariCP Connection Pool Settings
+    hikari:
+      pool-name: Bank-Hikari-Pool  # Identifiable name for monitoring
+
+      # Transaction Control
+      auto-commit: false  # Recommended for proper transaction management
+      transaction-isolation: TRANSACTION_READ_COMMITTED  # Default isolation level
+
+      # Timeout Settings
+      connection-timeout: 30000  # 30s to acquire connection
+      validation-timeout: 5000   # 5s max for connection validation
+      idle-timeout: 600000       # 10min max idle time
+      max-lifetime: 1800000      # 30min max connection lifetime
+
+      # Pool Sizing
+      maximum-pool-size: 20      # Reasonable for H2 (adjust for production)
+      minimum-idle: 5            # Maintain 5 ready connections
+
+      # Monitoring & Diagnostics
+      leak-detection-threshold: 60000  # 60s to detect connection leaks
+      initialization-fail-timeout: 1   # Fail fast on initialization errors
+      connection-test-query: SELECT 1  # Simple connection validation query
+
+      # Prepared Statement Caching
+      data-source-properties:
+        cachePrepStmts: true           # Enable prepared statement caching
+        prepStmtCacheSize: 250         # Number of prepared statements to cache
+        prepStmtCacheSqlLimit: 2048    # Maximum length of cached SQL
+      driver-class-name: org.h2.Driver
+
+  # JPA/HIBERNATE CONFIGURATION
+  jpa:
+    # Database Dialect
+    #database-platform: org.hibernate.dialect.H2Dialect
+    # Development Settings (disable in production)
+    show-sql: true                    # Log SQL statements
+    hibernate:
+      ddl-auto: create-drop           # Create and drop schema automatically
+    properties:
+      hibernate:
+        # SQL Formatting (disable in production)
+        format_sql: true              # Pretty-print SQL
+        show_sql: true                # Show SQL in logs (enable in dev to monitor the query execution)
+
+        # Performance Optimizations
+        default_batch_fetch_size: 20  # Batch size for lazy loading
+        generate_statistics: true     # Enable performance metrics
+        batch_size: 30                # JDBC batch size
+        order_inserts: true           # Optimize batch inserts
+        order_updates: true           # Optimize batch updates
+
+        # Connection Management
+        connection.provider_disables_autocommit: true  # Align with Hikari setting
+        jdbc.lob.non_contextual_creation: true  # Fixes LOB creation issues
+        # Second-level cache configuration
+        #cache:
+          #use_second_level_cache: true
+          #region.factory_class:
+          #use_query_cache: true
+    # Safety Settings
+    defer-datasource-initialization: true  # Wait for schema initialization
+    open-in-view: false                   # Prevent session-per-request anti-pattern
+
+  # JACKSON JSON PROCESSING
+  jackson:
+    default-property-inclusion: non_null  # Skip null fields in JSON
+    serialization:
+      indent-output: true  # Pretty-print JSON (disable in production)
+
+# LOGGING CONFIGURATION
+logging:
+  level:
+    # Hibernate Logging
+    org:
+      hibernate:
+        SQL: DEBUG         # Log all SQL statements
+        type: TRACE        # Log parameter bindings (verbose)
+
+      # Spring Framework Logging
+      springframework:
+        web: INFO         # General web logging
+        jdbc: DEBUG       # JDBC resource management
+
+    # HikariCP Connection Pool Logging
+    com:
+      zaxxer:
+        hikari: INFO       # Connection pool lifecycle events
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,metrics,hikaricp
+  metrics:
+    tags:
+      locale: ${spring.web.locale}
+    enable:
+      hikaricp: true
+  endpoint:
+    metrics:
+      access: read_only
+# AWS Configuration
+aws:
+  region: af-south-1
+  sns:
+    withdrawal-topic-arn: arn:aws:sns:af-south-1:123456789012:withdrawal-topic
+  resilience4j:
+    circuit-breaker:
+      instances:
+        snsPublisher:
+
+# CORS Configuration
+cors:
+  allowed-origins:
+    - https://bank.mkhungo.co.za
+    - https://onlinebanking.com
+  allowed-headers:
+    - Authorization
+    - Content-Type
+    - X-Requested-With
+  allowed-methods:
+    - GET
+    - POST
+    - PUT
+  exposed-headers:
+    - Authorization
+  max-age: 3600
+

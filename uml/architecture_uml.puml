@@ -1,0 +1,240 @@
+@startuml
+class za.co.mkhungo.bank.response.CustomErrorResponse {
+- Instant timestamp
+- int status
+- String error
+- String message
+- String path
+- Map<String,Object> details
++ String path()
++ String message()
++ String error()
++ Map<String,Object> details()
++ Instant timestamp()
++ int status()
+}
+
+
+class za.co.mkhungo.bank.domain.Transact {
+- UUID id
+- Account account
+- TransactionType type
+- TransactionStatus status
+- BigDecimal amount
+- LocalDateTime time
+}
+
+class za.co.mkhungo.bank.event.WithdrawalEvent {
+- BigDecimal amount
+- Long accountId
+- String status
+}
+
+class za.co.mkhungo.bank.BankApplication {
++ {static} void main(String[])
+}
+
+class za.co.mkhungo.bank.exception.InvalidAmountException {
+}
+class za.co.mkhungo.bank.response.AccountSummaryResponse {
+- Long accountId
+- BigDecimal runningBalance
+- String message
++ String message()
++ Long accountId()
++ BigDecimal runningBalance()
+}
+
+
+class za.co.mkhungo.bank.constants.MessageKeys {
++ {static} String ACCOUNT_NOT_FOUND
++ {static} String ACCOUNT_WITHDRAW_TRANSACTION_START
+}
+
+interface za.co.mkhungo.bank.repository.AccountRepository {
+~ Optional<Account> findByIdForUpdate(Long)
+}
+
+class za.co.mkhungo.bank.exception.InsufficientFundsException {
+}
+class za.co.mkhungo.bank.controller.BankAccountController {
+- AccountService accountService
++ ResponseEntity<ApiResponse<AccountSummaryResponse>> withdraw(Long,BigDecimal)
+}
+
+
+class za.co.mkhungo.bank.exception.TransactionFailedException {
+}
+enum za.co.mkhungo.bank.domain.enums.TransactionStatus {
++  PENDING
++  COMPLETED
++  FAILED
++  REVERSED
++  CANCELED
++  IN_PROGRESS
++  AUTHORIZED
++  SETTLED
++  REFUNDED
+- String description
++ String getDescription()
+}
+
+
+class za.co.mkhungo.bank.config.ApplicationConfig {
+- String region
++ SnsClient snsClient()
++ ObjectMapper objectMapper()
++ MessageSource messageSource()
++ LocaleResolver localeResolver()
+}
+
+
+class za.co.mkhungo.bank.exception.AccountNotFoundException {
+}
+class za.co.mkhungo.bank.BankApplicationTests {
+~ void contextLoads()
+}
+
+interface za.co.mkhungo.bank.event.publisher.EventPublisher {
+~ void publish(T)
+}
+
+class za.co.mkhungo.bank.domain.AccountAudit {
+- UUID id
+- String eventType
+- BigDecimal amount
+- LocalDateTime timestamp
+- Account account
+- String initiatedBy
+}
+
+class za.co.mkhungo.bank.exception.handler.GlobalExceptionHandler {
++ ResponseEntity<?> handleException(Exception)
++ ResponseEntity<?> handleDatabaseError(DataAccessException)
++ ResponseEntity<ApiResponse<CustomErrorResponse>> handleAccountNotFound(AccountNotFoundException)
++ ResponseEntity<ApiResponse<CustomErrorResponse>> handleInsufficientFunds(InsufficientFundsException)
++ ResponseEntity<ApiResponse<CustomErrorResponse>> handleInvalidAmount(InvalidAmountException)
++ ResponseEntity<ApiResponse<CustomErrorResponse>> handleTransactionFailed(TransactionFailedException)
+}
+
+class za.co.mkhungo.bank.utils.AccountValidationUtils {
++ {static} void validateAccountId(Long)
++ {static} void validateAccountStatus(Account)
+}
+
+enum za.co.mkhungo.bank.domain.enums.AccountStatus {
++  ACTIVE
++  INACTIVE
++  FROZEN
++  CLOSED
+- String description
++ String getDescription()
+}
+
+
+class za.co.mkhungo.bank.domain.Account {
+- Long id
+- String accountNumber
+- BigDecimal balance
+- AccountStatus status
+- List<Transact> transactions
+- List<AccountAudit> auditLogs
+- Long version
+- LocalDateTime createdAt
+- LocalDateTime updatedAt
+# void onCreate()
+# void onUpdate()
++ void withdraw(BigDecimal)
++ void addTransaction(Transact)
++ void addAuditLog(AccountAudit)
++ int hashCode()
++ boolean equals(Object)
+}
+
+
+class za.co.mkhungo.bank.service.impl.DefaultAccountService {
+- AccountRepository accountRepository
+- SnsEventPublisher snsEventPublisher
++ void withdraw(Long,BigDecimal)
+- void performWithdrawal(Account,BigDecimal)
+}
+
+
+class za.co.mkhungo.bank.response.ApiResponse {
+- String status
+- T data
+- String error
++ {static} ApiResponse<T> success(T)
++ {static} ApiResponse<T> error(T)
++ T data()
++ String status()
++ String error()
+}
+
+
+interface za.co.mkhungo.bank.service.AccountService {
+~ void withdraw(Long,BigDecimal)
+}
+
+class za.co.mkhungo.bank.helper.MessageLookup {
+- {static} MessageSource messageSource
++ {static} String getMessage(String,Object)
+}
+
+
+class za.co.mkhungo.bank.exception.JsonSerializationException {
+}
+enum za.co.mkhungo.bank.domain.enums.TransactionType {
++  DEPOSIT
++  WITHDRAW
++  TRANSFER
++  PAYMENT
++  REFUND
++  FEE
++  INTEREST
++  TAX
++  REVERSAL
++  LOAN_DISBURSEMENT
++  LOAN_REPAYMENT
++  CASHBACK
+- String description
++ String getDescription()
+}
+
+
+class za.co.mkhungo.bank.event.publisher.impl.DefaultWithdrawEventPublisher {
+- SnsClient snsClient
+- ObjectMapper objectMapper
+- String snsTopicArn
+- String dlqTopicArn
++ void publish(WithdrawalEvent)
++ void fallbackPublish(WithdrawalEvent,Throwable)
+}
+
+
+class za.co.mkhungo.bank.DataInitializer {
+- AccountRepository accountRepository
++ void init()
+- Account createAccount(String,String,AccountStatus)
+- String generateValidAccountNumber(String,String)
+}
+
+
+
+
+java.io.Serializable <|.. za.co.mkhungo.bank.domain.Transact
+java.io.Serializable <|.. za.co.mkhungo.bank.exception.InvalidAmountException
+za.co.mkhungo.bank.exception.RuntimeException <|-- za.co.mkhungo.bank.exception.InvalidAmountException
+org.springframework.data.jpa.repository.JpaRepository <|-- za.co.mkhungo.bank.repository.AccountRepository
+java.io.Serializable <|.. za.co.mkhungo.bank.exception.InsufficientFundsException
+za.co.mkhungo.bank.exception.RuntimeException <|-- za.co.mkhungo.bank.exception.InsufficientFundsException
+java.io.Serializable <|.. za.co.mkhungo.bank.exception.TransactionFailedException
+za.co.mkhungo.bank.exception.RuntimeException <|-- za.co.mkhungo.bank.exception.TransactionFailedException
+java.io.Serializable <|.. za.co.mkhungo.bank.exception.AccountNotFoundException
+za.co.mkhungo.bank.exception.RuntimeException <|-- za.co.mkhungo.bank.exception.AccountNotFoundException
+java.io.Serializable <|.. za.co.mkhungo.bank.domain.AccountAudit
+za.co.mkhungo.bank.service.AccountService <|.. za.co.mkhungo.bank.service.impl.DefaultAccountService
+java.io.Serializable <|.. za.co.mkhungo.bank.exception.JsonSerializationException
+za.co.mkhungo.bank.exception.RuntimeException <|-- za.co.mkhungo.bank.exception.JsonSerializationException
+za.co.mkhungo.bank.event.publisher.EventPublisher <|.. za.co.mkhungo.bank.event.publisher.impl.DefaultWithdrawEventPublisher
+@enduml
