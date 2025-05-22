@@ -94,3 +94,17 @@ This overhaul transformed a fragile setup into a modern, resilient system:
 | No Audit Logs          | Introduced AOP logging for key operations        | Compliance-ready logging                        |
 | No Metrics             | Added Micrometer-based timers                    | Real-time visibility into system performance    |
 
+
+## 🔐 License
+
+This codebase and its documentation are licensed under a **Closed-Source License**.
+
+**You may not**:
+- Use this code or its architecture in commercial, production, or client-facing systems.
+- Modify, distribute, or adapt any portion of this implementation without explicit written consent.
+- Incorporate design elements, architectural structures, or event-handling patterns into internal or external products.
+
+This software is provided solely for internal educational purposes or private architectural experimentation.  
+All rights reserved © Noxolo Mandisa Mkhungo, 2025.
+
+For full terms, refer to [`LICENSE`](LICENSE.md).
